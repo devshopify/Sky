@@ -1,0 +1,8 @@
+{%- comment -%} 单个参数行 {%- endcomment -%}
+<link rel="stylesheet" href="{{ 'custom-card.css' | asset_url }}">
+
+<div class="spec-card" {{ block.shopify_attributes }}>
+  {% render 'icon-arrow' %}
+  <span class="label">{{ block.settings.label }}</span>
+  <span class="value" data-specs="{{ 'a2-3000-specs.json' | asset_url }}"></span>
+</div>

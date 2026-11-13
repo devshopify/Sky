@@ -1,0 +1,8 @@
+{
+  "product": "A2 3000",
+  "rows": [
+    { "label": "Saugkraft", "value": "30000 Pa", "icon": "icon-arrow.svg" },
+    { "label": "Akku", "value": "5200 mAh", "icon": "icon-arrow.svg" },
+    { "label": "Laufzeit", "value": "90 min", "icon": "icon-arrow.svg" }
+  ]
+}

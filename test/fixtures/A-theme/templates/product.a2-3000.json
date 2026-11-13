@@ -1,0 +1,41 @@
+{
+  "sections": {
+    "main": {
+      "type": "product-specs-comparison",
+      "settings": {
+        "heading": "A2 3000 Parametervergleich",
+        "spec_file": "a2-3000-specs.json",
+        "hero_image": "hero-banner.jpg",
+        "mobile_image": "hero-banner-mobile.jpg",
+        "promo_video": "shopify://videos/a2-3000-promo.mp4",
+        "background": "shopify://shop_images/a2-bg.jpg",
+        "custom_css": "theme.css"
+      },
+      "blocks": {
+        "row-1": {
+          "type": "spec_row",
+          "settings": {
+            "icon": "icon-arrow.svg",
+            "label": "Saugkraft"
+          }
+        },
+        "row-2": {
+          "type": "spec_row",
+          "settings": {
+            "icon": "icon-arrow.svg",
+            "label": "Akku"
+          }
+        }
+      },
+      "block_order": ["row-1", "row-2"]
+    },
+    "specs_bottom": {
+      "type": "product-specs-comparison",
+      "settings": {
+        "heading": "Weitere Daten",
+        "spec_file": "a2-3000-specs.json"
+      }
+    }
+  },
+  "order": ["main", "specs_bottom"]
+}

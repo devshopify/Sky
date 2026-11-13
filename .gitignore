@@ -1,0 +1,30 @@
+node_modules/
+dist/
+dist-ssr/
+
+# 运行时数据（本地克隆的仓库、备份、下载的图片）
+data/
+/dreame*/
+
+# 测试产物
+v*.png
+*.local
+
+# 日志与系统文件
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# 编辑器
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 内部记忆
+.workbuddy/

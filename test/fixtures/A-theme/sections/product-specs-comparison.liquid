@@ -1,0 +1,39 @@
+{%- comment -%} 参数对比组件 {%- endcomment -%}
+{{ 'theme.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'theme.js' | asset_url }}" defer></script>
+
+<section class="specs-compare" id="specs-{{ section.id }}">
+  <h2>{{ section.settings.heading }}</h2>
+
+  <div class="specs-hero" style="background-image: url({{ 'hero-banner-mobile.jpg' | asset_url }})">
+    <img src="{{ 'hero-banner.jpg' | asset_url }}" alt="{{ section.settings.heading }}" loading="lazy">
+  </div>
+
+  <video class="specs-video" src="{{ 'product-video.mp4' | file_url }}" muted loop playsinline></video>
+
+  <div class="specs-grid">
+    {%- for block in section.blocks -%}
+      {%- render 'product-card', block: block, spec_file: section.settings.spec_file -%}
+    {%- endfor -%}
+  </div>
+
+  {% render 'icon-arrow' %}
+</section>
+
+{%- if section.settings.spec_file != blank -%}
+  <script type="application/json" id="specs-data-{{ section.id }}">
+    {{ section.settings.spec_file | asset_url | json }}
+  </script>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Specs Comparison",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading" },
+    { "type": "text", "id": "spec_file", "label": "Spec JSON" }
+  ],
+  "blocks": [{ "type": "spec_row", "name": "Spec Row" }]
+}
+{% endschema %}

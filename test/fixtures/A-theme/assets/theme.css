@@ -1,0 +1,28 @@
+@font-face {
+  font-family: 'Inter';
+  src: url('font-inter.woff2') format('woff2');
+  font-display: swap;
+}
+
+.specs-compare {
+  --gold: #c8a063;
+  padding: 40px 0;
+}
+
+.specs-hero {
+  background-size: cover;
+  background-position: center;
+}
+
+.specs-hero img {
+  width: 100%;
+  height: auto;
+}
+
+.specs-video {
+  width: 100%;
+}
+
+.spec-card {
+  border-bottom: 1px solid #eee;
+}

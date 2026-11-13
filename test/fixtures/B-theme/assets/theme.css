@@ -1,0 +1,13 @@
+/* B 站（法语站）现有样式，与 A 站版本不同 */
+.specs-compare {
+  padding: 24px 0;
+}
+
+.spec-card {
+  border-bottom: 1px solid #ddd;
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+}
