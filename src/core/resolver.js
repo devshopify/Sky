@@ -109,7 +109,9 @@ function resolveRef(site, ref) {
     case 'shopify-file-name': {
       // 很多主题把主题资源误写成 file_url，优先在 assets 里找
       const rel = findAsset(site, t);
-      return rel ? { rel } : { external: { kind: 'shopify-files', raw: t, name: t, bucket: 'files', key: ref.key } };
+      return rel
+        ? { rel }
+        : { external: { kind: 'shopify-files', raw: t, name: t, bucket: 'files', scheme: 'shopify', key: ref.key } };
     }
     case 'global-asset':
       return { external: { kind: 'global-asset', raw: t, name: t, key: ref.key } };
@@ -139,6 +141,7 @@ function resolveRef(site, ref) {
             external: {
               kind: 'shopify-files',
               bucket: c.bucket,
+              scheme: c.scheme,
               raw: ref.raw,
               name: c.name,
               key: ref.key,
@@ -292,9 +295,9 @@ export async function resolveDependencies(site, entryRel, options = {}) {
       } else if (r.external) {
         const e = r.external;
 
-        // 只有 shopify://shop_images/ 这种店内存引用需要下载
-        // 其余（shopify://videos、shopify://files、CDN 完整链接）本身带地址，跨站可直接访问
-        if (e.kind === 'shopify-files' && e.bucket === 'images') {
+        // shopify:// 协议引用的是店铺内部资源，跨站会失效，需要下载
+        // （shop_images / videos / files 都算；带 http(s) 完整地址的不用）
+        if (e.kind === 'shopify-files' && e.scheme === 'shopify') {
           const key = `media::${e.name}`;
           if (!media.has(key)) {
             media.set(key, {

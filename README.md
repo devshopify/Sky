@@ -42,21 +42,21 @@ npm run preview    # 预览构建结果
 | 类型 | 处理方式 |
 | --- | --- |
 | **liquid**（section / snippet / layout） | 顺着 `{% render %}` `{% section %}` 递归展开，逐个比对 B 站 |
-| **媒体** | 只有 `shopify://shop_images/` 开头的图片进下载清单。A 站 `assets/` 里有同名文件的走文件比对 |
+| **媒体** | `shopify://` 协议的引用（`shop_images` / `videos` / `files`）进下载清单。A 站 `assets/` 里有同名文件的走文件比对 |
 
-`shopify://videos/`、`shopify://files/` 以及 `https://cdn.shopify.com/...` 这类完整地址本身就能跨站访问，
-不进下载清单，只在「其他外部引用」里列出来备查。
+`https://cdn.shopify.com/...` 这类带完整地址的图片本身就能跨站访问，不进下载清单，
+只在「其他外部引用」里列出来备查。
 
 入口 JSON 自身始终在清单里。
 
 ## 四种结果
 
 - **缺失** —— B 站没有，需要搬迁（默认勾选）
-- **待下载** —— `shopify://shop_images/` 的图片，执行时按 CDN 地址下载并打包
+- **待下载** —— `shopify://` 引用的图片 / 视频，执行时按 CDN 地址下载并打包
 - **冲突** —— B 站有同名文件但内容不同（大小 + SHA-256 判定），默认不勾
 - **已存在** —— 内容完全一致，不需要动
 
-另有单独列出、不自动处理的：`shopify://videos/` 等非图片引用、App 嵌入块、外部链接、
+另有单独列出、不自动处理的：CDN 完整地址、App 嵌入块、外部链接、
 `{% render some_var %}` 这类动态引用。
 
 ## 执行后拿到什么

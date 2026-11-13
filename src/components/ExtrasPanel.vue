@@ -21,16 +21,12 @@ const kindHint = {
 };
 
 function extLabel(e) {
-  if (e.kind === 'shopify-files') {
-    if (e.bucket === 'videos') return '视频引用';
-    if (e.bucket === 'files') return '完整地址';
-    return '店内引用';
-  }
+  if (e.kind === 'shopify-files') return '完整地址';
   return kindLabel[e.kind] || e.kind;
 }
 
 function extHint(e) {
-  if (e.kind === 'shopify-files') return '不在下载范围（只处理 shopify://shop_images/）';
+  if (e.kind === 'shopify-files') return '已带完整地址，浏览器可直接访问，无需下载';
   return kindHint[e.kind] || '';
 }
 </script>

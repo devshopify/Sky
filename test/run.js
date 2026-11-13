@@ -5,6 +5,7 @@ import { createNodeReader } from '../server/node-reader.js';
 import { resolveDependencies } from '../src/core/resolver.js';
 import { compareSites, compareMedia } from '../src/core/compare.js';
 import { buildMediaUrl } from '../src/core/downloader.js';
+import { classifyString } from '../src/core/parsers/shared.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const A_DIR = path.join(__dirname, 'fixtures/A-theme');
@@ -88,15 +89,20 @@ check('assets/theme.js 未纳入', fileStatus('assets/theme.js'), 'NOT FOUND');
 check('assets/a2-3000-specs.json 未纳入', fileStatus('assets/a2-3000-specs.json'), 'NOT FOUND');
 check('assets/font-inter.woff2 未纳入', fileStatus('assets/font-inter.woff2'), 'NOT FOUND');
 
-console.log('\n== 断言：只有 shopify://shop_images/ 进入待下载 ==');
+console.log('\n== 断言：shopify:// 协议引用都要下载 ==');
 check('a2-bg.jpg (shop_images)', mediaStatus('a2-bg.jpg'), 'download');
-check('a2-3000-promo.mp4 (shopify://videos) 不下载', mediaStatus('a2-3000-promo.mp4'), 'NOT FOUND');
-check(
-  'promo 归入外部引用',
-  deps.externals.some((e) => e.name === 'a2-3000-promo.mp4') ? 'yes' : 'no',
-  'yes'
-);
-check('媒体总数', String(media.length), '1');
+check('a2-3000-promo.mp4 (videos)', mediaStatus('a2-3000-promo.mp4'), 'download');
+check('媒体总数', String(media.length), '2');
+
+console.log('\n== 断言：带完整地址的不下载 ==');
+{
+  const cdnCls = classifyString('https://cdn.shopify.com/s/files/1/0553/1320/3405/files/remote-only.png?v=1');
+  check('CDN 完整链接 -> http 来源', cdnCls && cdnCls.scheme, 'http');
+  const fileCls = classifyString('shopify://files/manual.pdf');
+  check('shopify://files -> shopify 来源', fileCls && fileCls.scheme, 'shopify');
+  const vidCls = classifyString('shopify://videos/a.mp4');
+  check('shopify://videos -> shopify 来源', vidCls && vidCls.scheme, 'shopify');
+}
 
 console.log('\n== 断言：CDN 拼接 ==');
 check('a2-bg.jpg URL', buildMediaUrl(base, 'a2-bg.jpg'), 'https://es.dreametech.com/cdn/shop/files/a2-bg.jpg');

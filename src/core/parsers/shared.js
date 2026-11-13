@@ -114,29 +114,33 @@ export function classifyString(raw) {
   // HTML 片段（settings 里的自定义 HTML）不是资源路径
   if (t.length > 20 && (t.includes('<') || t.includes('>'))) return null;
 
-  // Shopify 协议
+  // Shopify 协议：shopify://shop_images/、shopify://videos/、shopify://files/ 都是店内存引用
   if (t.startsWith('shopify://')) {
     const m = t.match(/^shopify:\/\/([a-z_]+)\/(.+)$/i);
-    if (!m) return { kind: 'unknown' , text: t };
+    if (!m) return { kind: 'unknown', text: t };
     const bucket = m[1].toLowerCase();
     const name = m[2];
     if (bucket === 'apps') return { kind: 'app', bucket, name, text: t };
-    if (bucket === 'shop_images') return { kind: 'shopify-file', bucket: 'images', name, text: t };
-    if (bucket === 'videos') return { kind: 'shopify-file', bucket: 'videos', name, text: t };
-    if (bucket === 'files') return { kind: 'shopify-file', bucket: 'files', name, text: t };
-    return { kind: 'shopify-file', bucket, name, text: t };
+    return {
+      kind: 'shopify-file',
+      bucket: bucket === 'shop_images' ? 'images' : bucket,
+      name,
+      text: t,
+      scheme: 'shopify',
+    };
   }
 
   // 绝对 URL
   if (/^(https?:)?\/\//i.test(t)) {
     const cdn = parseCdnUrl(t);
     if (cdn && cdn.kind === 'theme-asset') {
-      return { kind: 'cdn-asset', name: cdn.name, text: t };
+      return { kind: 'cdn-asset', name: cdn.name, text: t, scheme: 'http' };
     }
     if (cdn && cdn.kind === 'files') {
-      return { kind: 'shopify-file', bucket: 'files', name: cdn.name, text: t };
+      // 完整地址，跨站可直接访问，不需要下载
+      return { kind: 'shopify-file', bucket: 'files', name: cdn.name, text: t, scheme: 'http' };
     }
-    return { kind: 'external-url', text: t };
+    return { kind: 'external-url', text: t, scheme: 'http' };
   }
 
   // Liquid 模板拼接 / JS 模板字符串 -> 动态
