@@ -870,3 +870,32 @@ input::placeholder { color: #a9b0bd; font-family: -apple-system, "PingFang SC", 
   .block input + input { margin-top: 6px; }
   .block input { margin-bottom: 0; }
 }
+
+/* 字段行 + 行内小按钮 */
+.field-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+.field-row .field-label { margin: 0; }
+.mini-btn {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--brand);
+  font-size: 10.5px;
+  padding: 2px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  line-height: 1.6;
+  text-decoration: none;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  transition: background 0.12s, border-color 0.12s;
+}
+.mini-btn:hover { background: var(--brand-soft); border-color: var(--brand); }
+@media (max-height: 780px) {
+  .field-row { margin-bottom: 4px; }
+  .field-row .field-label { display: block; }
+}

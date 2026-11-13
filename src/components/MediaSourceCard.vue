@@ -1,6 +1,9 @@
 <script setup>
 import { ui } from '../composables/useMigration.js';
 
+/** 各站点图片地址速查页，随应用一起发布 */
+const sitesUrl = `${import.meta.env.BASE_URL}sites.html`;
+
 function onBaseInput(e) {
   ui.mediaBase = e.target.value;
   localStorage.setItem('migrator.media', ui.mediaBase);
@@ -19,7 +22,10 @@ function onZipInput(e) {
       <h2>图片与导出</h2>
     </div>
 
-    <label class="field-label">图片来源地址</label>
+    <div class="field-row">
+      <label class="field-label">图片来源地址</label>
+      <a class="mini-btn" :href="sitesUrl" target="_blank" rel="noopener">地址链接</a>
+    </div>
     <input
       :value="ui.mediaBase"
       type="text"

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shopify 各站点图片下载地址</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: "Microsoft YaHei", sans-serif; margin: 0; padding: 24px; background: #f5f6fa; }
+  h1 { font-size: 22px; color: #333; }
+  .container { max-width: 1000px; margin: 0 auto; }
+  .form-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .form-row input { padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+  .form-row input.site { width: 240px; }
+  .form-row input.url { flex: 1; min-width: 300px; }
+  button { padding: 8px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+  .btn-add { background: #5c67f2; color: #fff; }
+  .btn-copy { background: #28a745; color: #fff; }
+  .btn-del { background: #dc3545; color: #fff; }
+  .btn-sync { background: #fff; color: #5c67f2; border: 1px solid #5c67f2; }
+  .sync-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+  .sync-status { color: #888; font-size: 13px; }
+  .sync-status.ok { color: #28a745; }
+  .sync-status.err { color: #dc3545; }
+  table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  th, td { padding: 10px 12px; border-bottom: 1px solid #eee; text-align: left; font-size: 14px; word-break: break-all; }
+  th { background: #f0f1f5; color: #555; }
+  td.ops { white-space: nowrap; }
+  td.ops button { margin-right: 6px; }
+  .tip { color: #888; font-size: 13px; margin: 10px 0 20px; }
+  #toast { position: fixed; left: 50%; top: 40px; transform: translateX(-50%) translateY(-20px);
+    background: rgba(0,0,0,.8); color: #fff; padding: 10px 18px; border-radius: 6px; font-size: 14px;
+    opacity: 0; pointer-events: none; transition: opacity .3s, transform .3s; max-width: 80vw; word-break: break-all; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }</style>
+</head>
+<body>
+<div class="container">
+  <h1>Shopify 各站点图片下载地址</h1>
+  <div class="tip">数据保存在浏览器 localStorage 中；绑定本文件后，添加 / 删除会自动同步写入页面源码里的 DEFAULTS。</div>
+
+  <div class="form-row">
+    <input class="site" id="siteName" placeholder="站点名称，如：西班牙(ES)">
+    <input class="url" id="siteUrl" placeholder="下载地址前缀，如：https://es.dreametech.com/cdn/shop/files/">
+    <button class="btn-add" onclick="addSite()">添加</button>
+  </div>
+
+  <div class="sync-row">
+    <button class="btn-sync" onclick="bindFile()">绑定本文件（自动同步 DEFAULTS）</button>
+    <button class="btn-sync" onclick="copyDefaultsCode()">复制 DEFAULTS 代码</button>
+    <span class="sync-status" id="syncStatus">未绑定文件，仅保存在浏览器本地</span>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th style="width:180px">站点</th><th>图片下载地址前缀</th><th style="width:160px">操作</th></tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<script>
+const KEY = 'shopify_site_image_urls';
+// DEFAULTS_START
+const DEFAULTS = [
+  { site: "西班牙(ES)", url: "https://es.dreametech.com/cdn/shop/files/" },
+  { site: "墨西哥(MX)", url: "https://mx.dreametech.com/cdn/shop/files/" },
+  { site: "阿联酋(UAE)", url: "https://ae.dreametech.com/cdn/shop/files/" },
+  { site: "Global", url: "https://global.dreametech.com/cdn/shop/files/" },
+  { site: "哥伦比亚(CO)", url: "https://co.dreametech.com/cdn/shop/files/" },
+  { site: "智利(Chile)", url: "https://cl.dreametech.com/cdn/shop/files/" },
+];
+// DEFAULTS_END
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || DEFAULTS; }
+  catch (e) { return DEFAULTS; }
+}
+function save(list) { localStorage.setItem(KEY, JSON.stringify(list)); }
+
+function render() {
+  const list = load();
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  list.forEach((item, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${item.site}</td>
+      <td>${item.url}</td>
+      <td class="ops">
+        <button class="btn-copy" onclick="copyUrl(${i})">复制</button>
+        <button class="btn-del" onclick="delSite(${i})">删除</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function addSite() {
+  const site = document.getElementById('siteName').value.trim();
+  const url = document.getElementById('siteUrl').value.trim();
+  if (!site || !url) { alert('请填写站点名称和下载地址'); return; }
+  const list = load();
+  list.push({ site, url });
+  save(list);
+  document.getElementById('siteName').value = '';
+  document.getElementById('siteUrl').value = '';
+  render();
+  writeToFile(list);
+}
+
+function delSite(i) {
+  if (!confirm('确定删除该站点？')) return;
+  const list = load();
+  list.splice(i, 1);
+  save(list);
+  render();
+  writeToFile(list);
+}
+
+function showToast(msg) {
+  let toast = document.getElementById('toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function copyUrl(i) {
+  const url = load()[i].url;
+  navigator.clipboard.writeText(url).then(() => showToast('已复制：' + url))
+    .catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = url; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+      showToast('已复制：' + url);
+    });
+}
+
+/* ---------- DEFAULTS 代码生成与自动同步 ---------- */
+
+function buildDefaultsCode(list) {
+  const lines = list.map(item => `  { site: ${JSON.stringify(item.site)}, url: ${JSON.stringify(item.url)} },`);
+  return '// DEFAULTS_START\nconst DEFAULTS = [\n' + lines.join('\n') + '\n];\n// DEFAULTS_END';
+}
+
+function setSyncStatus(text, type) {
+  const el = document.getElementById('syncStatus');
+  el.textContent = text;
+  el.className = 'sync-status' + (type ? ' ' + type : '');
+}
+
+function copyText(text, okMsg) {
+  navigator.clipboard.writeText(text).then(() => showToast(okMsg)).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    showToast(okMsg);
+  });
+}
+
+function copyDefaultsCode() {
+  copyText(buildDefaultsCode(load()), 'DEFAULTS 代码已复制，粘贴回 HTML 替换原内容即可');
+}
+
+/* IndexedDB 保存文件句柄，下次打开页面仍记得绑定的文件 */
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('shopify_site_url_tool', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('handles');
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbSet(key, val) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('handles', 'readwrite');
+    tx.objectStore('handles').put(val, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function idbGet(key) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('handles', 'readonly');
+    const req = tx.objectStore('handles').get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+let fileHandle = null;
+
+async function bindFile() {
+  if (!window.showOpenFilePicker) {
+    setSyncStatus('当前浏览器不支持自动写入，请用“复制 DEFAULTS 代码”手动更新（推荐 Chrome / Edge）', 'err');
+    return;
+  }
+  try {
+    const [handle] = await window.showOpenFilePicker({
+      types: [{ description: 'HTML 文件', accept: { 'text/html': ['.html'] } }],
+      multiple: false
+    });
+    fileHandle = handle;
+    await idbSet('htmlFile', handle).catch(() => {});
+    await writeToFile(load());
+  } catch (e) {
+    if (e && e.name === 'AbortError') return;
+    setSyncStatus('绑定失败：' + (e && e.message ? e.message : e), 'err');
+  }
+}
+
+async function writeToFile(list) {
+  if (!fileHandle) return;
+  try {
+    let perm = await fileHandle.queryPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') perm = await fileHandle.requestPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') {
+      setSyncStatus('未获得写入权限，请重新点击“绑定本文件”', 'err');
+      return;
+    }
+    const file = await fileHandle.getFile();
+    const text = await file.text();
+    const re = /\/\/ DEFAULTS_START[\s\S]*?\/\/ DEFAULTS_END/;
+    if (!re.test(text)) {
+      setSyncStatus('文件中找不到 DEFAULTS 标记，无法自动同步', 'err');
+      return;
+    }
+    const next = text.replace(re, buildDefaultsCode(list));
+    const writable = await fileHandle.createWritable();
+    await writable.write(next);
+    await writable.close();
+    setSyncStatus('已同步到文件：' + file.name + '（刷新页面生效）', 'ok');
+  } catch (e) {
+    if (e && e.name === 'AbortError') return;
+    setSyncStatus('同步失败：' + (e && e.message ? e.message : e), 'err');
+  }
+}
+
+async function restoreHandle() {
+  if (!window.showOpenFilePicker) return;
+  try {
+    const handle = await idbGet('htmlFile');
+    if (handle) {
+      fileHandle = handle;
+      setSyncStatus('已绑定：' + handle.name + '（添加 / 删除时自动写入）');
+    }
+  } catch (e) { /* 忽略 */ }
+}
+
+render();
+restoreHandle();
+</script>
+</body>
+</html>
