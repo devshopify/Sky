@@ -87,7 +87,7 @@ npm run preview    # 预览构建结果
 
 ## 部署到 GitHub Pages
 
-线上地址：**https://devshopify.github.io/Sky/**
+线上地址：**https://devshopify.github.io/Sky-removal-json/**
 
 GitHub Pages 在 Free 计划下只支持公开仓库，所以这个仓库是 public 的（业务仓库和 `data/` 都已 gitignore）。
 

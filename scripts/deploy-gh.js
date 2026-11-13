@@ -9,7 +9,7 @@ const ROOT = path.resolve(__dirname, '..');
 const DIST = path.join(ROOT, 'dist');
 
 /** GitHub Pages 目标仓库与分支 */
-const REPO = process.env.GH_PAGES_REPO || 'https://github.com/devshopify/Sky.git';
+const REPO = process.env.GH_PAGES_REPO || 'https://github.com/devshopify/Sky-removal-json.git';
 const BRANCH = 'gh-pages';
 
 function run(cmd, cwd = ROOT) {
@@ -44,4 +44,4 @@ try {
 
 console.log('');
 console.log('完成。约 30~60 秒后生效：');
-console.log('  https://devshopify.github.io/Sky/');
+console.log('  https://devshopify.github.io/Sky-removal-json/');
