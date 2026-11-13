@@ -98,18 +98,22 @@ input { font-family: inherit; }
   display: flex;
   flex-direction: column;
   min-height: 0;
-  overflow: hidden;
+  /* 内容实在放不下时整栏滚动，底部按钮用 sticky 吸住 */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .block {
   padding: 13px 14px;
   border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
 }
 .block.grow {
-  flex: 1 1 0;
+  flex: 1 0 auto;
   display: flex;
   flex-direction: column;
-  min-height: 120px;
+  /* 标题 + 搜索框 + 内边距约 100px，这里再留出列表的 160px */
+  min-height: 260px;
   overflow: hidden;
   border-bottom: none;
 }
@@ -231,13 +235,13 @@ input::placeholder { color: #a9b0bd; font-family: -apple-system, "PingFang SC", 
 .picked button:hover { opacity: 1; }
 
 .entry-list {
-  flex: 1 1 0;
+  flex: 1 1 auto;
   overflow-y: auto;
   overflow-x: hidden;
   border: 1px solid var(--border);
   border-radius: 7px;
   background: var(--panel-2);
-  min-height: 0;
+  min-height: 160px;
   padding: 3px;
 }
 
@@ -261,7 +265,15 @@ input::placeholder { color: #a9b0bd; font-family: -apple-system, "PingFang SC", 
 
 .empty-hint { padding: 18px 10px; text-align: center; font-size: 11.5px; color: var(--muted); }
 
-.sidebar-foot { padding: 12px 14px; border-top: 1px solid var(--border); background: var(--panel); }
+.sidebar-foot {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+  flex: 0 0 auto;
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+}
 
 /* 按钮 */
 .btn-primary {
@@ -807,3 +819,33 @@ input::placeholder { color: #a9b0bd; font-family: -apple-system, "PingFang SC", 
   line-height: 1.65;
 }
 .zip-tip b { color: var(--text); }
+
+/* 禁用态按钮 */
+.btn-ghost:disabled { opacity: .38; cursor: not-allowed; }
+.btn-ghost:disabled:hover { background: #fff; color: var(--text-2); }
+
+/* 底部操作栏常驻 */
+.actionbar { flex: 0 0 auto; }
+.actionbar .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+
+/* Vue 挂载点：必须继承 body 的整屏高度与纵向 flex，
+   否则 .layout 的 flex:1 失效，页面会被内容撑高后在矮视口里溢出 */
+#app {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 矮视口（笔记本 768p 减去浏览器工具栏）下收紧侧栏，保证列表和按钮都放得下 */
+@media (max-height: 780px) {
+  .block { padding: 10px 13px; }
+  .block.grow { min-height: 190px; }
+  .entry-list { min-height: 110px; }
+  .sidebar-foot { padding: 9px 13px; }
+  .site-status { font-size: 11px; line-height: 1.45; }
+  .site-status .dir-line { display: none; }
+  .picked { margin-bottom: 5px; padding: 4px 7px; }
+  .entry-item { padding: 4px 7px; }
+}

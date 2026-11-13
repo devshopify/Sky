@@ -1,5 +1,14 @@
 <script setup>
-import { actionStats, chosenRows, clearSelection, execute, toast, siteB, ui } from '../composables/useMigration.js';
+import { computed } from 'vue';
+import {
+  actionStats, analysis, chosenRows, clearSelection, execute, toast, siteB, ui,
+} from '../composables/useMigration.js';
+
+const btnLabel = computed(() => {
+  if (!analysis.value) return '执行';
+  const { copy, dl } = actionStats.value;
+  return `执行（复制 ${copy.length} · 下载 ${dl.length}）`;
+});
 
 function humanSize(bytes) {
   if (!bytes && bytes !== 0) return '0 B';
@@ -26,7 +35,7 @@ function targetHint() {
   const site = siteB.value;
   if (!site) return '';
   if (site.reader.kind === 'fsa' && site.canWrite) return '直接写入 B 站目录';
-  return '打包成 zip 下载（B 站目录未授权写入）';
+  return '打包成 zip 下载';
 }
 </script>
 
@@ -41,9 +50,9 @@ function targetHint() {
       <span class="target-hint">{{ targetHint() }}</span>
     </div>
     <div class="action-btns">
-      <button class="btn-ghost" @click="clearSelection">清空选择</button>
+      <button class="btn-ghost" :disabled="!chosenRows.length" @click="clearSelection">清空选择</button>
       <button class="btn-primary" :disabled="!chosenRows.length || ui.busy" @click="onExecute">
-        执行（复制 {{ actionStats.copy.length }} · 下载 {{ actionStats.dl.length }}）
+        {{ btnLabel }}
       </button>
     </div>
   </div>

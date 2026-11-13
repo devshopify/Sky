@@ -112,7 +112,7 @@ onMounted(async () => {
     </section>
   </main>
 
-  <ActionBar v-if="hasResult" />
+  <ActionBar />
   <ResultDialog />
 
   <div v-if="ui.toast" class="toast show" :class="{ err: ui.toastType === 'error' }">{{ ui.toast }}</div>
