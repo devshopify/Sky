@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import {
-  siteA, siteB, chooseFolder, loadZip, loadFileList, clearSite,
+  siteA, siteB, chooseFolder, loadZip, loadFileList, clearSite, ui,
 } from '../composables/useMigration.js';
 
 const props = defineProps({ which: { type: String, required: true } });
@@ -10,6 +10,15 @@ const site = computed(() => (props.which === 'A' ? siteA.value : siteB.value));
 const dragging = ref(false);
 const fileInput = ref(null);
 const dirInput = ref(null);
+
+/** A 站只读即可；B 站要写入，必须走可授权的方式 */
+function pickDir() {
+  if (props.which === 'B' && ui.pickerSupport) {
+    chooseFolder('B');
+  } else {
+    dirInput.value.click();
+  }
+}
 
 const THEME_DIRS = ['assets', 'sections', 'snippets', 'templates', 'layout', 'config', 'blocks', 'locales'];
 const PRIORITY = ['assets', 'sections', 'snippets', 'templates', 'layout', 'config', 'blocks', 'locales'];
@@ -59,9 +68,9 @@ function onDirChange(e) {
 
     <template v-if="!site">
       <div class="pick-row">
-        <button class="btn-ghost wide" @click="dirInput.click()">
+        <button class="btn-ghost wide" @click="pickDir">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7h6l2 2h10v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7z" /></svg>
-          选择主题文件夹
+          {{ which === 'B' ? '选择 B 站目录（可写入）' : '选择主题文件夹' }}
         </button>
       </div>
       <input
@@ -85,11 +94,10 @@ function onDirChange(e) {
         <span>或拖入 / 选择 zip</span>
       </div>
       <input ref="fileInput" type="file" accept=".zip" hidden @change="onFileChange" />
-      <button v-if="which === 'B'" class="link-btn" @click="chooseFolder('B')">
-        需要直接写入目录？授权一下
-      </button>
       <div class="site-status">
-        <span class="muted">{{ which === 'A' ? '选 A 站主题根目录，无需任何授权' : '选 B 站主题根目录，默认只读' }}</span>
+        <span class="muted">
+          {{ which === 'A' ? '选 A 站主题根目录，无需授权' : '授权后可把文件直接写进去；也可以只读，执行时打包 zip' }}
+        </span>
       </div>
     </template>
 
@@ -106,6 +114,13 @@ function onDirChange(e) {
         <span class="dir-line" :title="dirSummary">{{ dirSummary || '—' }}</span>
         <span v-if="site.nested" class="dir-line">主题根：<code>{{ site.themeRootName }}</code></span>
       </div>
+      <button
+        v-if="which === 'B' && !site.canWrite"
+        class="link-btn warn-link"
+        @click="chooseFolder('B')"
+      >
+        当前只读 · 点此授权，文件将直接写入 B 站
+      </button>
     </template>
   </section>
 </template>
