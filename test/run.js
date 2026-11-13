@@ -88,9 +88,15 @@ check('assets/theme.js 未纳入', fileStatus('assets/theme.js'), 'NOT FOUND');
 check('assets/a2-3000-specs.json 未纳入', fileStatus('assets/a2-3000-specs.json'), 'NOT FOUND');
 check('assets/font-inter.woff2 未纳入', fileStatus('assets/font-inter.woff2'), 'NOT FOUND');
 
-console.log('\n== 断言：shopify:// 图片进入待下载 ==');
-check('a2-3000-promo.mp4', mediaStatus('a2-3000-promo.mp4'), 'download');
-check('a2-bg.jpg', mediaStatus('a2-bg.jpg'), 'download');
+console.log('\n== 断言：只有 shopify://shop_images/ 进入待下载 ==');
+check('a2-bg.jpg (shop_images)', mediaStatus('a2-bg.jpg'), 'download');
+check('a2-3000-promo.mp4 (shopify://videos) 不下载', mediaStatus('a2-3000-promo.mp4'), 'NOT FOUND');
+check(
+  'promo 归入外部引用',
+  deps.externals.some((e) => e.name === 'a2-3000-promo.mp4') ? 'yes' : 'no',
+  'yes'
+);
+check('媒体总数', String(media.length), '1');
 
 console.log('\n== 断言：CDN 拼接 ==');
 check('a2-bg.jpg URL', buildMediaUrl(base, 'a2-bg.jpg'), 'https://es.dreametech.com/cdn/shop/files/a2-bg.jpg');

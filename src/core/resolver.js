@@ -292,13 +292,14 @@ export async function resolveDependencies(site, entryRel, options = {}) {
       } else if (r.external) {
         const e = r.external;
 
-        // Shopify Files / CDN 上的媒体 -> 归入待下载清单
-        if (e.kind === 'shopify-files') {
+        // 只有 shopify://shop_images/ 这种店内存引用需要下载
+        // 其余（shopify://videos、shopify://files、CDN 完整链接）本身带地址，跨站可直接访问
+        if (e.kind === 'shopify-files' && e.bucket === 'images') {
           const key = `media::${e.name}`;
           if (!media.has(key)) {
             media.set(key, {
               name: e.name,
-              bucket: e.bucket || 'files',
+              bucket: e.bucket,
               kind: guessMediaKind(e.name),
               raw: e.raw,
               refFrom: f.rel,

@@ -19,6 +19,20 @@ const kindHint = {
   'cdn-asset': 'CDN 上的资源，视需要手动处理',
   'external-url': '外部链接，视需要手动处理',
 };
+
+function extLabel(e) {
+  if (e.kind === 'shopify-files') {
+    if (e.bucket === 'videos') return '视频引用';
+    if (e.bucket === 'files') return '完整地址';
+    return '店内引用';
+  }
+  return kindLabel[e.kind] || e.kind;
+}
+
+function extHint(e) {
+  if (e.kind === 'shopify-files') return '不在下载范围（只处理 shopify://shop_images/）';
+  return kindHint[e.kind] || '';
+}
 </script>
 
 <template>
@@ -31,9 +45,9 @@ const kindHint = {
     </div>
     <div v-show="open.ext" class="extra-body">
       <div v-for="e in res.externals" :key="e.kind + e.name" class="ext-row">
-        <div class="ext-kind">{{ kindLabel[e.kind] || e.kind }}</div>
+        <div class="ext-kind">{{ extLabel(e) }}</div>
         <div class="ext-name" :title="e.name || e.raw">{{ e.name || e.raw }}</div>
-        <div class="ext-hint">{{ kindHint[e.kind] || '' }} · {{ e.refFrom }}</div>
+        <div class="ext-hint">{{ extHint(e) }} · {{ e.refFrom }}</div>
       </div>
     </div>
   </div>
