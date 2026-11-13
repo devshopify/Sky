@@ -772,3 +772,38 @@ input::placeholder { color: #a9b0bd; font-family: -apple-system, "PingFang SC", 
   font-size: 11px;
 }
 .site-status { min-height: 0; }
+
+/* 下载包列表 */
+.zip-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--panel-2);
+  margin-bottom: 6px;
+}
+.zip-name {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+.zip-meta {
+  font-size: 11px;
+  color: var(--muted);
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.zip-tip {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  color: var(--text-2);
+  line-height: 1.65;
+}
+.zip-tip b { color: var(--text); }

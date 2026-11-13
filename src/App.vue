@@ -36,7 +36,7 @@ onMounted(async () => {
       `copyFail=${r ? r.failed.length : 0}`,
       `dlOk=${dl ? dl.success : 0}`,
       `dlFail=${dl ? dl.failed : 0}`,
-      `zip=${r && r.zipName ? 'yes' : 'no'}`,
+      `zips=${r ? r.zips.length : 0}`,
       `err=${ui.error || '-'}`,
     ].join(' ');
   }

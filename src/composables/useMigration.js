@@ -317,18 +317,29 @@ export async function execute() {
   const { copy, dl } = actionStats.value;
   if (!copy.length && !dl.length) return;
   if (dl.length && !ui.mediaBase.trim()) {
-    toast('选中的媒体需要下载，请先填图片来源地址', 'error');
+    toast('选中的媒体需要下载，请先填写图片来源地址', 'error');
     return;
   }
 
   const direct = Boolean(siteB.value && siteB.value.reader.kind === 'fsa' && siteB.value.canWrite);
-  const bundle = {};
-  const report = { copied: [], failed: [], downloads: null, savedTo: direct ? 'target' : 'zip', zipName: '' };
+  const entrySlug = (analysis.value?.entry || 'bundle').replace(/[\\/]/g, '_').replace(/\.json$/i, '');
+  const stamp = Date.now();
+
+  const themeBundle = {};
+  const zipQueue = [];
+  const report = {
+    copied: [],
+    failed: [],
+    downloads: null,
+    zips: [],
+    savedTo: direct ? 'target' : 'zip',
+  };
 
   ui.busy = true;
   ui.busyText = direct ? '正在写入目标站点…' : '正在收集文件…';
 
   try {
+    /* 1. 主题文件：能写就直接写，不能写就攒着打包 */
     for (let i = 0; i < copy.length; i += 1) {
       const row = copy[i];
       ui.busyText = `复制 ${i + 1}/${copy.length}：${row.rel}`;
@@ -339,7 +350,7 @@ export async function execute() {
           // eslint-disable-next-line no-await-in-loop
           await siteB.value.writeBytes(row.rel, bytes);
         } else {
-          bundle[row.rel] = bytes;
+          themeBundle[row.rel] = bytes;
         }
         report.copied.push(row.rel);
       } catch (e) {
@@ -347,13 +358,15 @@ export async function execute() {
       }
     }
 
+    /* 2. 媒体下载：不管目标目录能不能写，都单独打一个 zip 给浏览器 */
     if (dl.length) {
-      ui.busyText = '正在下载图片…';
+      ui.busyText = '正在下载图片 / 视频…';
       const res = await downloadMedia({
         items: dl.map((r) => ({ name: r.name })),
         baseUrl: ui.mediaBase.trim(),
-        onProgress: (p) => { ui.busyText = `下载图片 ${p.done}/${p.total}：${p.name}`; },
+        onProgress: (p) => { ui.busyText = `下载 ${p.done}/${p.total}：${p.name}`; },
       });
+
       report.downloads = {
         total: res.total,
         success: res.success,
@@ -367,19 +380,43 @@ export async function execute() {
           url: r.url,
         })),
       };
-      res.results
-        .filter((r) => r.ok)
-        .forEach((r) => {
-          bundle[`_downloads/${safeName(r.name)}`] = r.bytes;
+
+      const ok = res.results.filter((r) => r.ok);
+      if (ok.length) {
+        const mediaBundle = {};
+        // Files 是扁平命名空间，保持原文件名，解压后直接拖进后台上传
+        ok.forEach((r) => { mediaBundle[safeName(r.name)] = r.bytes; });
+        zipQueue.push({
+          name: `media-${entrySlug}-${stamp}.zip`,
+          kind: 'media',
+          count: ok.length,
+          files: mediaBundle,
         });
+      }
     }
 
-    if (!direct && Object.keys(bundle).length) {
-      ui.busyText = '正在打包…';
-      const data = await zipAsync(bundle);
-      const name = `migration-${(analysis.value?.entry || 'bundle').replace(/[\\/]/g, '_')}-${Date.now()}.zip`;
-      downloadBlob(data, name);
-      report.zipName = name;
+    /* 3. 主题文件打包（仅目标目录不可写时） */
+    if (!direct && Object.keys(themeBundle).length) {
+      zipQueue.push({
+        name: `theme-${entrySlug}-${stamp}.zip`,
+        kind: 'theme',
+        count: Object.keys(themeBundle).length,
+        files: themeBundle,
+      });
+    }
+
+    /* 4. 依次触发下载（间隔一下，避免浏览器把第二个当成弹窗拦截） */
+    for (let i = 0; i < zipQueue.length; i += 1) {
+      const q = zipQueue[i];
+      ui.busyText = `正在打包 ${i + 1}/${zipQueue.length}：${q.name}`;
+      // eslint-disable-next-line no-await-in-loop
+      const data = await zipAsync(q.files);
+      if (i > 0) {
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((r) => setTimeout(r, 700));
+      }
+      downloadBlob(data, q.name);
+      report.zips.push({ name: q.name, kind: q.kind, count: q.count, size: data.length });
     }
 
     if (direct) {

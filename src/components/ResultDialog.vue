@@ -5,6 +5,8 @@ import { ui, siteB, exportSiteZip } from '../composables/useMigration.js';
 const res = computed(() => ui.result);
 
 const failedDownloads = computed(() => (res.value && res.value.downloads ? res.value.downloads.results.filter((r) => !r.ok) : []));
+const hasMediaZip = computed(() => Boolean(res.value && res.value.zips.some((z) => z.kind === 'media')));
+const hasThemeZip = computed(() => Boolean(res.value && res.value.zips.some((z) => z.kind === 'theme')));
 
 function humanSize(bytes) {
   if (!bytes) return '0 B';
@@ -16,8 +18,6 @@ function humanSize(bytes) {
 function close() {
   ui.result = null;
 }
-
-const isZipMode = computed(() => res.value && res.value.savedTo === 'zip');
 </script>
 
 <template>
@@ -48,13 +48,21 @@ const isZipMode = computed(() => res.value && res.value.savedTo === 'zip');
           </div>
         </template>
 
-        <div v-if="isZipMode && res.zipName" class="path-box">
-          已生成增量包：{{ res.zipName }}<br />
-          <span class="muted">解压覆盖到 B 站主题根即可；<code>_downloads/</code> 里的图片是需要上传到后台 Files 的。</span>
-        </div>
-        <div v-else-if="!isZipMode" class="path-box">
-          已直接写入目标站点的主题目录。
-        </div>
+        <template v-if="res.zips.length">
+          <div class="res-section-title">已下载到浏览器</div>
+          <div v-for="z in res.zips" :key="z.name" class="zip-row">
+            <div class="zip-name" :title="z.name">{{ z.name }}</div>
+            <div class="zip-meta">
+              {{ z.kind === 'media' ? '图片 / 视频' : '主题文件' }} · {{ z.count }} 个 · {{ humanSize(z.size) }}
+            </div>
+          </div>
+          <p class="zip-tip">
+            <template v-if="hasMediaZip">media 包解压后把文件传到 B 站后台 <b>Files</b>（保持同名），JSON 里的 shopify:// 引用即可生效。</template>
+            <template v-if="hasThemeZip">theme 包解压覆盖到 B 站主题根目录。</template>
+          </p>
+        </template>
+
+        <div v-if="res.savedTo === 'target'" class="path-box">主题文件已直接写入目标站点的主题目录。</div>
       </div>
 
       <div class="modal-foot">
