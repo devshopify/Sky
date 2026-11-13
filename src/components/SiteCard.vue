@@ -9,13 +9,15 @@ const dragging = ref(false);
 const fileInput = ref(null);
 
 const THEME_DIRS = ['assets', 'sections', 'snippets', 'templates', 'layout', 'config', 'blocks', 'locales'];
+const PRIORITY = ['assets', 'sections', 'snippets', 'templates', 'layout', 'config', 'blocks', 'locales'];
 
 const dirSummary = computed(() => {
   if (!site.value) return '';
-  return Object.entries(site.value.stats.byDir)
-    .filter(([k]) => THEME_DIRS.includes(k))
-    .map(([k, v]) => `${k} ${v}`)
-    .join(' · ');
+  const entries = Object.entries(site.value.stats.byDir).filter(([k]) => THEME_DIRS.includes(k));
+  entries.sort((a, b) => PRIORITY.indexOf(a[0]) - PRIORITY.indexOf(b[0]));
+  const shown = entries.slice(0, 4).map(([k, v]) => `${k} ${v}`);
+  const rest = entries.length - 4;
+  return shown.join(' · ') + (rest > 0 ? ` +${rest}` : '');
 });
 
 function humanSize(bytes) {
@@ -78,11 +80,9 @@ function onFileChange(e) {
         <span v-if="site.canWrite && site.reader.kind === 'fsa'" class="tag-write">可写入</span>
       </div>
       <div class="site-status">
-        <span class="ok-mark">✓</span> {{ site.stats.total }} 个文件 · {{ humanSize(site.stats.totalSize) }}<br />
-        <span class="muted">{{ dirSummary || '—' }}</span>
-        <template v-if="site.nested">
-          <br /><span class="muted">主题根：<code>{{ site.themeRootName }}</code></span>
-        </template>
+        <span class="ok-mark">✓</span> {{ site.stats.total }} 个文件 · {{ humanSize(site.stats.totalSize) }}
+        <span class="dir-line" :title="dirSummary">{{ dirSummary || '—' }}</span>
+        <span v-if="site.nested" class="dir-line">主题根：<code>{{ site.themeRootName }}</code></span>
       </div>
     </template>
   </section>
