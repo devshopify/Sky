@@ -85,6 +85,22 @@ npm run preview    # 预览构建结果
 
 不支持目录选择的浏览器会自动降级为 zip 模式。
 
+## 部署到 GitHub Pages
+
+线上地址：**https://devshopify.github.io/Sky/**
+
+GitHub Pages 在 Free 计划下只支持公开仓库，所以这个仓库是 public 的（业务仓库和 `data/` 都已 gitignore）。
+
+更新线上版本只要一条命令：
+
+```bash
+npm run deploy:gh
+```
+
+它做三件事：以 `/Sky/` 为 base 构建 → 写入 `.nojekyll` → 强制推送到 `gh-pages` 分支。约 30~60 秒后生效。
+
+改仓库地址的话，设环境变量 `GH_PAGES_REPO` 即可；改子路径改 `.env.ghpages` 里的 `VITE_BASE`。
+
 ## 开发
 
 ```
