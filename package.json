@@ -9,7 +9,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "server": "node server/index.js",
-    "test": "node test/run.js"
+    "test": "node test/run.js",
+    "build:gh": "vite build --mode ghpages",
+    "deploy:gh": "node scripts/deploy-gh.js"
   },
   "dependencies": {
     "fflate": "^0.8.2",

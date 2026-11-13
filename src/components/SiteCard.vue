@@ -1,12 +1,15 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { siteA, siteB, chooseFolder, loadZip, clearSite } from '../composables/useMigration.js';
+import {
+  siteA, siteB, chooseFolder, loadZip, loadFileList, clearSite,
+} from '../composables/useMigration.js';
 
 const props = defineProps({ which: { type: String, required: true } });
 
 const site = computed(() => (props.which === 'A' ? siteA.value : siteB.value));
 const dragging = ref(false);
 const fileInput = ref(null);
+const dirInput = ref(null);
 
 const THEME_DIRS = ['assets', 'sections', 'snippets', 'templates', 'layout', 'config', 'blocks', 'locales'];
 const PRIORITY = ['assets', 'sections', 'snippets', 'templates', 'layout', 'config', 'blocks', 'locales'];
@@ -38,6 +41,12 @@ function onFileChange(e) {
   if (file) loadZip(props.which, file);
   e.target.value = '';
 }
+
+function onDirChange(e) {
+  const files = e.target.files;
+  if (files && files.length) loadFileList(props.which, files);
+  e.target.value = '';
+}
 </script>
 
 <template>
@@ -50,11 +59,20 @@ function onFileChange(e) {
 
     <template v-if="!site">
       <div class="pick-row">
-        <button class="btn-ghost wide" @click="chooseFolder(which)">
+        <button class="btn-ghost wide" @click="dirInput.click()">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7h6l2 2h10v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7z" /></svg>
           选择主题文件夹
         </button>
       </div>
+      <input
+        ref="dirInput"
+        type="file"
+        webkitdirectory
+        directory
+        multiple
+        hidden
+        @change="onDirChange"
+      />
       <div
         class="dropzone"
         :class="{ dragover: dragging }"
@@ -67,8 +85,11 @@ function onFileChange(e) {
         <span>或拖入 / 选择 zip</span>
       </div>
       <input ref="fileInput" type="file" accept=".zip" hidden @change="onFileChange" />
+      <button v-if="which === 'B'" class="link-btn" @click="chooseFolder('B')">
+        需要直接写入目录？授权一下
+      </button>
       <div class="site-status">
-        <span class="muted">{{ which === 'A' ? '选 A 站主题根目录' : '选 B 站主题根目录，可授权写入' }}</span>
+        <span class="muted">{{ which === 'A' ? '选 A 站主题根目录，无需任何授权' : '选 B 站主题根目录，默认只读' }}</span>
       </div>
     </template>
 
@@ -76,6 +97,7 @@ function onFileChange(e) {
       <div class="site-loaded" :title="site.label">
         <span class="site-name">{{ site.label }}</span>
         <span v-if="site.reader.kind === 'fsa'" class="tag-fsa">目录</span>
+        <span v-else-if="site.reader.kind === 'filelist'" class="tag-read">只读</span>
         <span v-else class="tag-zip">zip</span>
         <span v-if="site.canWrite && site.reader.kind === 'fsa'" class="tag-write">可写入</span>
       </div>

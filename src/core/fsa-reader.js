@@ -103,8 +103,7 @@ export async function createFsaReader(dirHandle, { writable = false, onProgress 
 /**
  * 内存 reader：用于 zip 解压后的虚拟目录
  */
-export function createMemoryReader(label, fileMap) {
-  const files = fileMap; // Map<rel, Uint8Array>
+export function createMemoryReader(label, fileMap) {  const files = fileMap; // Map<rel, Uint8Array>
   let meta = null;
 
   const buildMeta = () => {
@@ -136,6 +135,50 @@ export function createMemoryReader(label, fileMap) {
     },
     exportFiles() {
       return files;
+    },
+  };
+}
+
+/**
+ * 基于 <input type="file" webkitdirectory> 的 reader。
+ * 用户选完文件夹直接拿到 File 列表，不弹任何授权框，只读。
+ */
+export function createFileListReader(fileList, fallbackLabel = 'theme') {
+  const files = new Map();
+  let rootName = '';
+
+  for (const f of fileList) {
+    const rel = String(f.webkitRelativePath || f.name).replace(/\\/g, '/');
+    if (!rel) continue;
+    if (rel.split('/').some((s) => s === '..' || s === '')) continue;
+    files.set(rel, f);
+    if (!rootName) rootName = rel.split('/')[0] || fallbackLabel;
+  }
+
+  const meta = [...files.entries()].map(([rel, f]) => ({
+    rel,
+    size: f.size,
+    mtime: f.lastModified,
+  }));
+
+  const get = (rel) => {
+    const f = files.get(rel);
+    if (!f) throw new Error(`文件不存在：${rel}`);
+    return f;
+  };
+
+  return {
+    label: rootName || fallbackLabel,
+    kind: 'filelist',
+    writable: false,
+    async list() {
+      return meta;
+    },
+    async readText(rel) {
+      return get(rel).text();
+    },
+    async readBytes(rel) {
+      return new Uint8Array(await get(rel).arrayBuffer());
     },
   };
 }

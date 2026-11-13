@@ -4,6 +4,7 @@ import { resolveDependencies } from '../core/resolver.js';
 import { compareSites, compareMedia } from '../core/compare.js';
 import { downloadMedia } from '../core/downloader.js';
 import {
+  createFileListReader,
   createFsaReader,
   createMemoryReader,
   hasDirectoryPicker,
@@ -153,9 +154,22 @@ export async function chooseFolder(which) {
     });
     ui.progress = null;
     await mountSite(which, reader);
-    toast(which === 'B' ? '目标站点已载入，可直接写入' : '源站点已载入');
+    toast(which === 'B' ? '目标站点已授权，可直接写入' : '源站点已载入');
   } catch (e) {
     if (e && e.name === 'AbortError') return;
+    ui.error = e.message;
+    toast(e.message, 'error');
+  }
+}
+
+/** 原生文件夹选择（webkitdirectory），不弹任何授权框，只读 */
+export async function loadFileList(which, fileList) {
+  if (!fileList || !fileList.length) return;
+  try {
+    const reader = createFileListReader(fileList);
+    await mountSite(which, reader);
+    toast(`已读取 ${fileList.length} 个文件${which === 'B' ? '（只读，执行时打包 zip）' : ''}`);
+  } catch (e) {
     ui.error = e.message;
     toast(e.message, 'error');
   }
