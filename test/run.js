@@ -89,6 +89,15 @@ check('assets/theme.js 未纳入', fileStatus('assets/theme.js'), 'NOT FOUND');
 check('assets/a2-3000-specs.json 未纳入', fileStatus('assets/a2-3000-specs.json'), 'NOT FOUND');
 check('assets/font-inter.woff2 未纳入', fileStatus('assets/font-inter.woff2'), 'NOT FOUND');
 
+console.log('\n== 断言：page_css 展开成 css 文件 ==');
+check('product-s9-pro.css', fileStatus('assets/product-s9-pro.css'), 'missing');
+check('product-s9-diff.css', fileStatus('assets/product-s9-diff.css'), 'missing');
+check(
+  'page_css 总数（含去重）',
+  String(cmp.items.filter((i) => i.refKey === 'sections.main.settings.page_css' || i.refKey === 'sections.specs_bottom.settings.page_css').length),
+  '2'
+);
+
 console.log('\n== 断言：shopify:// 协议引用都要下载 ==');
 check('a2-bg.jpg (shop_images)', mediaStatus('a2-bg.jpg'), 'download');
 check('a2-3000-promo.mp4 (videos)', mediaStatus('a2-3000-promo.mp4'), 'download');

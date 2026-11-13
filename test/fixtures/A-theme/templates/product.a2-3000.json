@@ -9,7 +9,8 @@
         "mobile_image": "hero-banner-mobile.jpg",
         "promo_video": "shopify://videos/a2-3000-promo.mp4",
         "background": "shopify://shop_images/a2-bg.jpg",
-        "custom_css": "theme.css"
+        "custom_css": "theme.css",
+        "page_css": "product-s9-pro; product-s9-diff"
       },
       "blocks": {
         "row-1": {
@@ -33,7 +34,8 @@
       "type": "product-specs-comparison",
       "settings": {
         "heading": "Weitere Daten",
-        "spec_file": "a2-3000-specs.json"
+        "spec_file": "a2-3000-specs.json",
+        "page_css": "product-s9-pro.css"
       }
     }
   },

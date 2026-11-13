@@ -47,6 +47,15 @@ npm run preview    # 预览构建结果
 `https://cdn.shopify.com/...` 这类带完整地址的图片本身就能跨站访问，不进下载清单，
 只在「其他外部引用」里列出来备查。
 
+**`page_css` 字段单独处理**：它存的是不带扩展名的样式名，支持分号分隔多个——
+
+```
+"page_css": "product-s9-pro"                  → product-s9-pro.css
+"page_css": "product-s9-pro; product-s9-diff" → product-s9-pro.css + product-s9-diff.css
+```
+
+这类样式默认不在范围内，但只要出现在 `page_css` 里就会强制纳入比对。
+
 入口 JSON 自身始终在清单里。
 
 ## 四种结果

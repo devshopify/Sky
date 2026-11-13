@@ -106,6 +106,13 @@ function resolveRef(site, ref) {
       const rel = findAsset(site, t);
       return rel ? { rel } : { unresolved: { kind: 'asset', target: t, key: ref.key, raw: ref.raw } };
     }
+    case 'page-css': {
+      // page_css 指向的样式默认不在分析范围里，这里强制纳入
+      const rel = findAsset(site, t);
+      return rel
+        ? { rel, force: true }
+        : { unresolved: { kind: 'page-css', target: t, key: ref.key, raw: ref.raw }, force: true };
+    }
     case 'shopify-file-name': {
       // 很多主题把主题资源误写成 file_url，优先在 assets 里找
       const rel = findAsset(site, t);
@@ -229,8 +236,8 @@ export async function resolveDependencies(site, entryRel, options = {}) {
     if (!f) continue;
 
     const cat = categoryOf(f.rel);
-    // 入口本身永远保留；其余按范围过滤
-    if (f.rel !== entry && !inScope(cat, scope)) continue;
+    // 入口本身永远保留；force 表示调用方明确要求纳入（如 page_css 指向的样式）
+    if (f.rel !== entry && !item.force && !inScope(cat, scope)) continue;
 
     nodes.set(f.rel, {
       rel: f.rel,
@@ -290,7 +297,13 @@ export async function resolveDependencies(site, entryRel, options = {}) {
         }
         if (!queued.has(r.rel)) {
           queued.add(r.rel);
-          queue.push({ rel: r.rel, via: f.rel, refKey: ref.key, depth: item.depth + 1 });
+          queue.push({
+            rel: r.rel,
+            via: f.rel,
+            refKey: ref.key,
+            depth: item.depth + 1,
+            force: Boolean(r.force),
+          });
         }
       } else if (r.external) {
         const e = r.external;
@@ -322,8 +335,9 @@ export async function resolveDependencies(site, entryRel, options = {}) {
         if (!dynamics.has(key)) dynamics.set(key, { ...r.dynamic, refFrom: f.rel });
       } else if (r.unresolved) {
         // 不在分析范围内的未解析项（比如 css/js）直接丢弃，避免噪音
+        // 但 page_css 指向的样式是明确要查的，保留
         const cat = guessCategoryFromName(r.unresolved.target);
-        if (cat && !inScope(cat, scope)) continue;
+        if (cat && !inScope(cat, scope) && r.unresolved.kind !== 'page-css') continue;
         const key = `${r.unresolved.kind}::${r.unresolved.target}`;
         if (!unresolved.has(key)) unresolved.set(key, { ...r.unresolved, refFrom: f.rel });
       }

@@ -158,6 +158,25 @@ export function parseJsonRefs(rel, raw) {
   walkStrings(json, '', strings);
 
   for (const { value, key } of strings) {
+    // page_css 这类字段存的是不带扩展名的样式名，可能用分号分隔多个
+    //   "product-s9-pro"                  -> product-s9-pro.css
+    //   "product-s9-pro; product-s9-diff" -> product-s9-pro.css + product-s9-diff.css
+    if (/page_css$/i.test(key) && typeof value === 'string') {
+      const names = value
+        .split(/[;,]/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+      for (const n of names) {
+        refs.push({
+          target: /\.css$/i.test(n) ? n : `${n}.css`,
+          type: 'page-css',
+          key,
+          raw: value,
+        });
+      }
+      continue;
+    }
+
     const c = classifyString(value);
     if (!c) continue;
 
