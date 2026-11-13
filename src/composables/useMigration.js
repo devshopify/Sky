@@ -37,6 +37,7 @@ export const selected = ref(new Set());
 export const ui = reactive({
   entry: null,
   mediaBase: localStorage.getItem('migrator.media') || '',
+  zipName: localStorage.getItem('migrator.zipName') || '',
   filter: 'all',
   search: '',
   collapsed: [],
@@ -327,6 +328,13 @@ function safeName(name) {
   return String(name).replace(/[\\/:*?"<>|]/g, '_');
 }
 
+/** 生成 zip 文件名；用户填了就用他的，否则按 类型-入口-时间戳 */
+function buildZipName(kind, kindCount, custom, entrySlug, stamp) {
+  if (!custom) return `${kind}-${entrySlug}-${stamp}.zip`;
+  // 只有一个包时直接用自定义名，两个包时按类型区分，避免同名覆盖
+  return kindCount === 1 ? `${custom}.zip` : `${custom}-${kind}.zip`;
+}
+
 export async function execute() {
   const { copy, dl } = actionStats.value;
   if (!copy.length && !dl.length) return;
@@ -402,7 +410,6 @@ export async function execute() {
         // Files 是扁平命名空间，保持原文件名，解压后直接拖进后台上传
         ok.forEach((r) => { mediaBundle[safeName(r.name)] = r.bytes; });
         zipQueue.push({
-          name: `media-${entrySlug}-${stamp}.zip`,
           kind: 'media',
           count: ok.length,
           files: mediaBundle,
@@ -413,7 +420,6 @@ export async function execute() {
     /* 3. 主题文件打包（仅目标目录不可写时） */
     if (!direct && Object.keys(themeBundle).length) {
       zipQueue.push({
-        name: `theme-${entrySlug}-${stamp}.zip`,
         kind: 'theme',
         count: Object.keys(themeBundle).length,
         files: themeBundle,
@@ -421,8 +427,10 @@ export async function execute() {
     }
 
     /* 4. 依次触发下载（间隔一下，避免浏览器把第二个当成弹窗拦截） */
+    const customZip = String(ui.zipName || '').trim().replace(/\.zip$/i, '');
     for (let i = 0; i < zipQueue.length; i += 1) {
       const q = zipQueue[i];
+      q.name = buildZipName(q.kind, zipQueue.length, customZip, entrySlug, stamp);
       ui.busyText = `正在打包 ${i + 1}/${zipQueue.length}：${q.name}`;
       // eslint-disable-next-line no-await-in-loop
       const data = await zipAsync(q.files);

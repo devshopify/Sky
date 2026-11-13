@@ -854,3 +854,19 @@ input::placeholder { color: #a9b0bd; font-family: -apple-system, "PingFang SC", 
 
 .warn-link { color: var(--warn); font-size: 11px; margin-top: 2px; }
 .warn-link:hover { color: #8a5607; }
+
+/* 侧栏内的字段标签 */
+.field-label {
+  display: block;
+  font-size: 10.5px;
+  color: var(--muted);
+  margin: 0 0 3px;
+  letter-spacing: 0.2px;
+}
+.block input + .field-label { margin-top: 9px; }
+@media (max-height: 780px) {
+  .field-label { display: none; }
+  .block input + .field-label { margin-top: 0; }
+  .block input + input { margin-top: 6px; }
+  .block input { margin-bottom: 0; }
+}

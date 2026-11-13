@@ -18,6 +18,8 @@ const hasResult = computed(() => Boolean(analysis.value));
 
 onMounted(async () => {
   const q = new URLSearchParams(location.search);
+  if (q.get('media')) ui.mediaBase = q.get('media');
+  if (q.get('zipname')) ui.zipName = q.get('zipname');
   if (q.get('demo') !== '1') return;
 
   await loadDemo();
@@ -37,6 +39,7 @@ onMounted(async () => {
       `dlOk=${dl ? dl.success : 0}`,
       `dlFail=${dl ? dl.failed : 0}`,
       `zips=${r ? r.zips.length : 0}`,
+      `zipNames=${r ? r.zips.map((z) => z.name).join(',') : '-'}`,
       `err=${ui.error || '-'}`,
     ].join(' ');
   }
