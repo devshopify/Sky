@@ -36,9 +36,9 @@
 <body>
 <div class="container">
   <h1>Shopify 各站点图片下载地址</h1>
-  <div class="tip">数据保存在浏览器 localStorage 中；绑定本文件后，添加 / 删除会自动同步写入页面源码里的 DEFAULTS。</div>
+  <!-- <div class="tip">数据保存在浏览器 localStorage 中；绑定本文件后，添加 / 删除会自动同步写入页面源码里的 DEFAULTS。</div> -->
 
-  <div class="form-row">
+  <!-- <div class="form-row">
     <input class="site" id="siteName" placeholder="站点名称，如：西班牙(ES)">
     <input class="url" id="siteUrl" placeholder="下载地址前缀，如：https://es.dreametech.com/cdn/shop/files/">
     <button class="btn-add" onclick="addSite()">添加</button>
@@ -48,7 +48,7 @@
     <button class="btn-sync" onclick="bindFile()">绑定本文件（自动同步 DEFAULTS）</button>
     <button class="btn-sync" onclick="copyDefaultsCode()">复制 DEFAULTS 代码</button>
     <span class="sync-status" id="syncStatus">未绑定文件，仅保存在浏览器本地</span>
-  </div>
+  </div> -->
 
   <table>
     <thead>
@@ -88,7 +88,6 @@ function render() {
       <td>${item.url}</td>
       <td class="ops">
         <button class="btn-copy" onclick="copyUrl(${i})">复制</button>
-        <button class="btn-del" onclick="delSite(${i})">删除</button>
       </td>`;
     tbody.appendChild(tr);
   });
