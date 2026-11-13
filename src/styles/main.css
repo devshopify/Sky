@@ -77,6 +77,15 @@ input { font-family: inherit; }
 .brand p { margin: 0; font-size: 11.5px; color: var(--muted); }
 .env { font-size: 11.5px; color: var(--muted); font-family: var(--mono); }
 
+.topbar-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.author { font-size: 11px; color: var(--muted); line-height: 1.35; }
+
 /* ---------------- 布局 ---------------- */
 .layout {
   flex: 1;

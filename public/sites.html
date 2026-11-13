@@ -13,6 +13,7 @@
   .form-row input { padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
   .form-row input.site { width: 240px; }
   .form-row input.url { flex: 1; min-width: 300px; }
+  .form-row select { padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; background: #fff; }
   button { padding: 8px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
   .btn-add { background: #5c67f2; color: #fff; }
   .btn-copy { background: #28a745; color: #fff; }
@@ -27,24 +28,34 @@
   th { background: #f0f1f5; color: #555; }
   td.ops { white-space: nowrap; }
   td.ops button { margin-right: 6px; }
+  tr.group-row td { background: #eef0f8; font-weight: 600; color: #3f4660; cursor: pointer; user-select: none; }
+  tr.group-row:hover td { background: #e4e7f5; }
+  tr.group-row .caret { display: inline-block; width: 14px; color: #8a90a8; }
+  tr.group-row .count { font-weight: 400; color: #8a90a8; font-size: 13px; }
   .tip { color: #888; font-size: 13px; margin: 10px 0 20px; }
   #toast { position: fixed; left: 50%; top: 40px; transform: translateX(-50%) translateY(-20px);
     background: rgba(0,0,0,.8); color: #fff; padding: 10px 18px; border-radius: 6px; font-size: 14px;
     opacity: 0; pointer-events: none; transition: opacity .3s, transform .3s; max-width: 80vw; word-break: break-all; }
-  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }</style>
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .footer { text-align: center; color: #999; font-size: 13px; margin-top: 24px; }</style>
 </head>
 <body>
 <div class="container">
   <h1>Shopify 各站点图片下载地址</h1>
-  <!-- <div class="tip">数据保存在浏览器 localStorage 中；绑定本文件后，添加 / 删除会自动同步写入页面源码里的 DEFAULTS。</div> -->
+  <!-- <div class="tip">数据保存在浏览器 localStorage 中；绑定本文件后，添加 / 删除会自动同步写入页面源码里的 DEFAULTS。列表按「西南欧 / 新兴区 / 其他站点」分组，点击分组标题行可折叠展开。</div> -->
 
   <!-- <div class="form-row">
     <input class="site" id="siteName" placeholder="站点名称，如：西班牙(ES)">
     <input class="url" id="siteUrl" placeholder="下载地址前缀，如：https://es.dreametech.com/cdn/shop/files/">
+    <select id="siteRegion">
+      <option value="西南欧">西南欧</option>
+      <option value="新兴区" selected>新兴区</option>
+      <option value="其他站点">其他站点</option>
+    </select>
     <button class="btn-add" onclick="addSite()">添加</button>
-  </div>
+  </div> -->
 
-  <div class="sync-row">
+  <!-- <div class="sync-row">
     <button class="btn-sync" onclick="bindFile()">绑定本文件（自动同步 DEFAULTS）</button>
     <button class="btn-sync" onclick="copyDefaultsCode()">复制 DEFAULTS 代码</button>
     <span class="sync-status" id="syncStatus">未绑定文件，仅保存在浏览器本地</span>
@@ -56,52 +67,111 @@
     </thead>
     <tbody id="tbody"></tbody>
   </table>
+  <div class="footer">此页面由 Sky 开发，有问题可联系 Sky</div>
 </div>
 
 <script>
 const KEY = 'shopify_site_image_urls';
+const REGIONS = ['西南欧', '新兴区', '其他站点'];
+const collapsed = {};   // 折叠状态：{ 区域名: true }
 // DEFAULTS_START
 const DEFAULTS = [
-  { site: "西班牙(ES)", url: "https://es.dreametech.com/cdn/shop/files/" },
-  { site: "墨西哥(MX)", url: "https://mx.dreametech.com/cdn/shop/files/" },
-  { site: "阿联酋(UAE)", url: "https://ae.dreametech.com/cdn/shop/files/" },
-  { site: "Global", url: "https://global.dreametech.com/cdn/shop/files/" },
-  { site: "哥伦比亚(CO)", url: "https://co.dreametech.com/cdn/shop/files/" },
-  { site: "智利(Chile)", url: "https://cl.dreametech.com/cdn/shop/files/" },
+  { site: "西班牙(ES)", url: "https://es.dreametech.com/cdn/shop/files/", region: "西南欧" },
+  { site: "墨西哥(MX)", url: "https://mx.dreametech.com/cdn/shop/files/", region: "新兴区" },
+  { site: "阿联酋(UAE)", url: "https://ae.dreametech.com/cdn/shop/files/", region: "新兴区" },
+  { site: "Global", url: "https://global.dreametech.com/cdn/shop/files/", region: "其他站点" },
+  { site: "哥伦比亚(CO)", url: "https://co.dreametech.com/cdn/shop/files/", region: "新兴区" },
+  { site: "智利(Chile)", url: "https://cl.dreametech.com/cdn/shop/files/", region: "新兴区" },
+  { site: "德国(DE)", url: "https://de.dreametech.com/cdn/shop/files/", region: "西南欧" },
+  { site: "法国(FR)", url: "https://fr.dreametech.com/cdn/shop/files/", region: "西南欧" },
+  { site: "意大利(IT)", url: "https://it.dreametech.com/cdn/shop/files/", region: "西南欧" },
+  { site: "荷兰(NL)", url: "https://nl.dreametech.com/cdn/shop/files/", region: "西南欧" },
+  { site: "比利时(BE)", url: "https://be.dreametech.com/cdn/shop/files/", region: "西南欧" },
+  { site: "奥地利(AT)", url: "https://at.dreametech.com/cdn/shop/files/", region: "西南欧" },
+  { site: "希腊(GR)", url: "https://gr.dreametech.com/cdn/shop/files/", region: "西南欧" },
+  { site: "葡萄牙(PT)", url: "https://pt.dreametech.com/cdn/shop/files/", region: "西南欧" },
+  { site: "爱尔兰(IE)", url: "https://ie.dreametech.com/cdn/shop/files/", region: "西南欧" },
+  { site: "土耳其(TR)", url: "https://dreametech.com.tr/cdn/shop/files/", region: "新兴区" },
+  { site: "沙特(KSA)", url: "https://ksa.dreametech.com/cdn/shop/files/", region: "新兴区" },
+  { site: "秘鲁(PE)", url: "https://pe.dreametech.com/cdn/shop/files/", region: "新兴区" },
+  { site: "US", url: "https://www.dreametech.com/cdn/shop/files/", region: "其他站点" },
 ];
 // DEFAULTS_END
 
+/* 旧数据没有 region 时按站点名推断：西班牙 → 西南欧，Global → 其他站点，其余 → 新兴区 */
+function guessRegion(site) {
+  if (/\(ES\)|西班牙/i.test(site)) return '西南欧';
+  if (/global/i.test(site)) return '其他站点';
+  return '新兴区';
+}
+function normalize(item) {
+  return {
+    site: item.site,
+    url: item.url,
+    region: REGIONS.indexOf(item.region) > -1 ? item.region : guessRegion(item.site)
+  };
+}
+
 function load() {
-  try { return JSON.parse(localStorage.getItem(KEY)) || DEFAULTS; }
-  catch (e) { return DEFAULTS; }
+  let list;
+  try { list = JSON.parse(localStorage.getItem(KEY)) || DEFAULTS; }
+  catch (e) { list = DEFAULTS; }
+  if (!Array.isArray(list)) list = DEFAULTS;
+  return list.map(normalize);
 }
 function save(list) { localStorage.setItem(KEY, JSON.stringify(list)); }
+
+function esc(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function toggleGroup(region) {
+  collapsed[region] = !collapsed[region];
+  render();
+}
 
 function render() {
   const list = load();
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = '';
-  list.forEach((item, i) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${item.site}</td>
-      <td>${item.url}</td>
-      <td class="ops">
-        <button class="btn-copy" onclick="copyUrl(${i})">复制</button>
-      </td>`;
-    tbody.appendChild(tr);
+  REGIONS.forEach(region => {
+    const rows = [];
+    list.forEach((item, i) => { if (item.region === region) rows.push({ item, i }); });
+    if (!rows.length) return;
+
+    const isCollapsed = !!collapsed[region];
+    const groupTr = document.createElement('tr');
+    groupTr.className = 'group-row';
+    groupTr.innerHTML = `<td colspan="3"><span class="caret">${isCollapsed ? '▶' : '▼'}</span>${esc(region)}<span class="count">（${rows.length}）</span></td>`;
+    groupTr.onclick = () => toggleGroup(region);
+    tbody.appendChild(groupTr);
+    if (isCollapsed) return;
+
+    rows.forEach(({ item, i }) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${esc(item.site)}</td>
+        <td>${esc(item.url)}</td>
+        <td class="ops">
+          <button class="btn-copy" onclick="copyUrl(${i})">复制</button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
   });
 }
 
 function addSite() {
   const site = document.getElementById('siteName').value.trim();
   const url = document.getElementById('siteUrl').value.trim();
+  const region = document.getElementById('siteRegion').value;
   if (!site || !url) { alert('请填写站点名称和下载地址'); return; }
   const list = load();
-  list.push({ site, url });
+  list.push({ site, url, region });
   save(list);
   document.getElementById('siteName').value = '';
   document.getElementById('siteUrl').value = '';
+  collapsed[region] = false;
   render();
   writeToFile(list);
 }
@@ -142,7 +212,10 @@ function copyUrl(i) {
 /* ---------- DEFAULTS 代码生成与自动同步 ---------- */
 
 function buildDefaultsCode(list) {
-  const lines = list.map(item => `  { site: ${JSON.stringify(item.site)}, url: ${JSON.stringify(item.url)} },`);
+  const lines = list.map(item => {
+    const it = normalize(item);
+    return `  { site: ${JSON.stringify(it.site)}, url: ${JSON.stringify(it.url)}, region: ${JSON.stringify(it.region)} },`;
+  });
   return '// DEFAULTS_START\nconst DEFAULTS = [\n' + lines.join('\n') + '\n];\n// DEFAULTS_END';
 }
 

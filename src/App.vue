@@ -61,6 +61,7 @@ onMounted(async () => {
     </div>
     <div class="topbar-right">
       <span class="env">纯前端 · 文件不出本机</span>
+      <span class="author">此页面由 Sky 开发，有问题可联系 Sky</span>
     </div>
   </header>
 
