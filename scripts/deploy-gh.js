@@ -12,11 +12,19 @@ const DIST = path.join(ROOT, 'dist');
 const REPO = process.env.GH_PAGES_REPO || 'https://github.com/devshopify/Sky-removal-json.git';
 const BRANCH = 'gh-pages';
 
+/** 发布基址：跟 .env.ghpages 里的 VITE_BASE 保持一致，避免日志写死过期 */
+function readBase() {
+  const envFile = path.join(ROOT, '.env.ghpages');
+  if (!fs.existsSync(envFile)) return './';
+  const matched = fs.readFileSync(envFile, 'utf8').match(/^\s*VITE_BASE\s*=\s*(\S+)/m);
+  return matched ? matched[1] : './';
+}
+
 function run(cmd, cwd = ROOT) {
   execSync(cmd, { cwd, stdio: 'inherit' });
 }
 
-console.log('▸ 构建（base = /Sky/）');
+console.log(`▸ 构建（base = ${readBase()}）`);
 run('npx vite build --mode ghpages');
 
 // Jekyll 会把下划线开头的文件吃掉，禁用它

@@ -97,7 +97,7 @@ GitHub Pages 在 Free 计划下只支持公开仓库，所以这个仓库是 pub
 npm run deploy:gh
 ```
 
-它做三件事：以 `/Sky/` 为 base 构建 → 写入 `.nojekyll` → 强制推送到 `gh-pages` 分支。约 30~60 秒后生效。
+它做三件事：以 `.env.ghpages` 里的 `VITE_BASE`（当前为 `/Sky-removal-json/`）为 base 构建 → 写入 `.nojekyll` → 强制推送到 `gh-pages` 分支。约 30~60 秒后生效。
 
 改仓库地址的话，设环境变量 `GH_PAGES_REPO` 即可；改子路径改 `.env.ghpages` 里的 `VITE_BASE`。
 
