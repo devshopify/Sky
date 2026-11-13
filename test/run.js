@@ -6,6 +6,7 @@ import { resolveDependencies } from '../src/core/resolver.js';
 import { compareSites, compareMedia } from '../src/core/compare.js';
 import { buildMediaUrl } from '../src/core/downloader.js';
 import { classifyString } from '../src/core/parsers/shared.js';
+import { originalName } from '../src/core/downloader.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const A_DIR = path.join(__dirname, 'fixtures/A-theme');
@@ -99,7 +100,7 @@ check(
 );
 
 console.log('\n== 断言：shopify:// 协议引用都要下载 ==');
-check('a2-bg.jpg (shop_images)', mediaStatus('a2-bg.jpg'), 'download');
+check('a2-bg_1600x.jpg (shop_images)', mediaStatus('a2-bg_1600x.jpg'), 'download');
 check('a2-3000-promo.mp4 (videos)', mediaStatus('a2-3000-promo.mp4'), 'download');
 check('媒体总数', String(media.length), '2');
 
@@ -112,6 +113,15 @@ console.log('\n== 断言：带完整地址的不下载 ==');
   const vidCls = classifyString('shopify://videos/a.mp4');
   check('shopify://videos -> shopify 来源', vidCls && vidCls.scheme, 'shopify');
 }
+
+console.log('\n== 断言：原图优先（去掉尺寸后缀） ==');
+check('a_1600x.png', originalName('a_1600x.png'), 'a.png');
+check('a_1600x900.png', originalName('a_1600x900.png'), 'a.png');
+check('a_x900.png', originalName('a_x900.png'), 'a.png');
+check('a@2x.png', originalName('a@2x.png'), 'a.png');
+check('a_crop_center.jpg', originalName('a_crop_center.jpg'), 'a.jpg');
+check('普通文件名不变', originalName('product-s9-pro.png'), 'product-s9-pro.png');
+check('中间带下划线不误伤', originalName('size_100x_test.png'), 'size_100x_test.png');
 
 console.log('\n== 断言：CDN 拼接 ==');
 check('a2-bg.jpg URL', buildMediaUrl(base, 'a2-bg.jpg'), 'https://es.dreametech.com/cdn/shop/files/a2-bg.jpg');

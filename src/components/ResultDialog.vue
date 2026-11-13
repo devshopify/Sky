@@ -5,6 +5,11 @@ import { ui, siteB, exportSiteZip } from '../composables/useMigration.js';
 const res = computed(() => ui.result);
 
 const failedDownloads = computed(() => (res.value && res.value.downloads ? res.value.downloads.results.filter((r) => !r.ok) : []));
+const originalCount = computed(() => {
+  const d = res.value && res.value.downloads;
+  if (!d) return 0;
+  return d.results.filter((r) => r.ok && r.resolvedName && r.resolvedName !== r.name).length;
+});
 const hasMediaZip = computed(() => Boolean(res.value && res.value.zips.some((z) => z.kind === 'media')));
 const hasThemeZip = computed(() => Boolean(res.value && res.value.zips.some((z) => z.kind === 'theme')));
 
@@ -43,6 +48,9 @@ function close() {
           <div class="stat-line"><span>成功</span><b class="ok">{{ res.downloads.success }}</b></div>
           <div class="stat-line"><span>失败</span><b :class="{ danger: res.downloads.failed }">{{ res.downloads.failed }}</b></div>
           <div class="stat-line"><span>总大小</span><b>{{ humanSize(res.downloads.totalSize) }}</b></div>
+          <div v-if="originalCount" class="stat-line">
+            <span>其中取原图（已去掉尺寸后缀）</span><b class="ok">{{ originalCount }}</b>
+          </div>
           <div v-for="d in failedDownloads" :key="d.name" class="stat-line">
             <span class="mono-small">{{ d.name }}</span><b class="danger">{{ d.reason }}</b>
           </div>
@@ -58,6 +66,10 @@ function close() {
           </div>
           <p class="zip-tip">
             <template v-if="hasMediaZip">media 包解压后把文件传到 B 站后台 <b>Files</b>（保持同名），JSON 里的 shopify:// 引用即可生效。</template>
+            <template v-if="originalCount">
+              有 {{ originalCount }} 个文件的引用名带尺寸后缀（如 <code>_1600x</code>），下载时已改取原图，
+              但<b>文件名保持原样</b>，这样上传到 Files 后引用才能直接对上。
+            </template>
             <template v-if="hasThemeZip">theme 包解压覆盖到 B 站主题根目录。</template>
           </p>
         </template>

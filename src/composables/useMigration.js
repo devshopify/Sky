@@ -388,6 +388,7 @@ export async function execute() {
         totalSize: res.totalSize,
         results: res.results.map((r) => ({
           name: r.name,
+          resolvedName: r.resolvedName,
           ok: r.ok,
           size: r.size,
           reason: r.reason,

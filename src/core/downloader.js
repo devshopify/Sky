@@ -17,9 +17,17 @@ export function buildMediaUrl(baseUrl, name) {
   return b + encoded;
 }
 
-/** CDN 上常见的尺寸后缀，去掉后一般就是原图 */
-function stripSizeSuffix(name) {
-  return String(name).replace(/_\d+x(?=\.[a-z0-9]+$)/i, '');
+/**
+ * Shopify CDN 的尺寸 / 裁剪后缀，去掉后就是原图。
+ * 形如 xxx_1600x.png、xxx_1600x900.png、xxx_x900.png、xxx_crop_center.png、xxx_grande.png、xxx@2x.png
+ */
+export function originalName(name) {
+  return String(name)
+    .replace(
+      /_(?:\d+x\d+|\d+x|x\d+|crop_[a-z]+|grande|medium|small|compact|large|thumb|icon|pico)(?=\.[a-z0-9]+$)/i,
+      ''
+    )
+    .replace(/@\d+x(?=\.[a-z0-9]+$)/i, '');
 }
 
 async function fetchOne(url, timeout) {
@@ -30,7 +38,8 @@ async function fetchOne(url, timeout) {
       signal: controller.signal,
       redirect: 'follow',
       headers: {
-        Accept: 'image/avif,image/webp,image/apng,image/*,video/*,*/*',
+        // 不要声明 avif/webp：CDN 会据此转码，拿到的就不是原图了
+        Accept: '*/*',
       },
     });
     if (!res.ok) return { ok: false, reason: `HTTP ${res.status}`, url };
@@ -68,9 +77,11 @@ export async function downloadMedia({ items, baseUrl, concurrency = 5, timeout =
       if (idx >= list.length) return;
 
       const it = list[idx];
-      const candidates = [it.name];
-      const stripped = stripSizeSuffix(it.name);
-      if (stripped !== it.name) candidates.push(stripped);
+      // 原图优先：先去尺寸后缀，404 再退回带后缀的地址
+      const candidates = [];
+      const orig = originalName(it.name);
+      if (orig && orig !== it.name) candidates.push(orig);
+      candidates.push(it.name);
 
       let last = { ok: false, reason: '未配置下载地址' };
       for (const candidate of candidates) {

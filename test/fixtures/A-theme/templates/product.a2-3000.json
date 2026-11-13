@@ -8,7 +8,7 @@
         "hero_image": "hero-banner.jpg",
         "mobile_image": "hero-banner-mobile.jpg",
         "promo_video": "shopify://videos/a2-3000-promo.mp4",
-        "background": "shopify://shop_images/a2-bg.jpg",
+        "background": "shopify://shop_images/a2-bg_1600x.jpg",
         "custom_css": "theme.css",
         "page_css": "product-s9-pro; product-s9-diff"
       },
